@@ -20,7 +20,7 @@ public class ByteCode implements Opcodes{
             String classPath=interFacePath.replaceAll(interFaceName,"impl/"+className);
             AnnotationVisitor av=null ;
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-            cw.visit(V1_7, ACC_PUBLIC + ACC_SUPER,classPath, null, "java/lang/Object", new String[]{interFacePath});
+            cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER,classPath, null, "java/lang/Object", new String[]{interFacePath});
             structure(cw);
             Method[] methods=this.sourceInterFace.getMethods();
             for (Method method:methods) {
