@@ -1,4 +1,4 @@
-# proxy spring+netty+common-pools2+CGLIB  集成简单RPC框架
+# proxy spring+netty+common-pools2+CGLIB  集成简单RPC框架（后续更新scala版本）
 服务端配置：
 <bean class="com.rpc.suppor.ScannerConfigure">
     <property name="basePackage" value="com.server"/>#需要暴露服务所在的包路径，支持通配符，必须
