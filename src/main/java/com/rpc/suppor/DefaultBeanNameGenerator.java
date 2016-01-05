@@ -11,6 +11,7 @@ import java.util.Map;
 
 /**
  * Created by zhangtao on 2015/12/29.
+ *  RPC服务spring命名策略
  */
 public class DefaultBeanNameGenerator extends AnnotationBeanNameGenerator {
     @Override
