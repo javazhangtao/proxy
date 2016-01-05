@@ -1,10 +1,12 @@
 package com.rpc.proxy;
 
+import com.rpc.common.annotations.RS;
 import com.rpc.proxy.utils.ByteCode;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 /**
@@ -13,7 +15,6 @@ import java.lang.reflect.Method;
  */
 public class AbstractProxy implements Proxy , MethodInterceptor{
     private Class<?> sourceClazz;//需要代理原始class
-    private boolean isServer=false;//是否服务端，默认false
 
     @Override
     public Object getInstance() throws Exception{
@@ -34,6 +35,12 @@ public class AbstractProxy implements Proxy , MethodInterceptor{
 
     @Override
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        boolean isServer = false;
+        try {
+            isServer = ifServer();
+        }catch (Exception e){
+            throw(e);
+        }
         if(isServer){
             //返回RpcResponse对象   给netty框架回调
         }else{
@@ -42,19 +49,33 @@ public class AbstractProxy implements Proxy , MethodInterceptor{
         return null;
     }
 
+
+    /**
+     * 判断被扫描类是否服务
+     * @return
+     * @throws Exception
+     */
+    private boolean ifServer() throws Exception{
+        Annotation[] annotationClazzs=this.sourceClazz.getAnnotations();
+        if(null!=annotationClazzs && annotationClazzs.length>0){
+            for (Annotation annotation:annotationClazzs){
+                if(annotation.getClass().getName().equals(RS.class.getName())){
+                    return true ;
+                }else{
+                    return false ;
+                }
+            }
+            return false ;
+        }else{
+            throw new NullPointerException("sourceClazz's  annotation is null ");
+        }
+    }
+
     public Class<?> getSourceClazz() {
         return sourceClazz;
     }
 
     public void setSourceClazz(Class<?> sourceClazz) {
         this.sourceClazz = sourceClazz;
-    }
-
-    public boolean isServer() {
-        return isServer;
-    }
-
-    public void setServer(boolean server) {
-        isServer = server;
     }
 }
