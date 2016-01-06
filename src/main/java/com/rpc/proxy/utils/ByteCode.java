@@ -12,7 +12,7 @@ public class ByteCode implements Opcodes{
 
     private Class sourceInterFace;
 
-    public Class<?> createClass() throws Exception{
+    public <T> Class<T> createClass() throws Exception{
         try {
             String interFaceName=this.sourceInterFace.getSimpleName();//接口名称
             String interFacePath=this.sourceInterFace.getName().replaceAll("\\.","/");//接口路径    .替换/

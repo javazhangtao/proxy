@@ -76,7 +76,7 @@ public class ScannerConfigure implements BeanDefinitionRegistryPostProcessor, In
             throw new NullPointerException("property [annotationClass] is null ");
         }
         scanner.setResourceLoader(this.context);
-        scanner.setContext(this.context);
+        scanner.setBeanNameGenerator(this.beanNameGenerator);
         scanner.registerFilters();
         scanner.scan(StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));
     }

@@ -1,13 +1,11 @@
 package com.rpc.suppor;
 
-import com.rpc.common.annotations.RS;
 import com.rpc.suppor.pools.ServerPoolHandler;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
@@ -23,7 +21,6 @@ import java.util.Set;
  */
 public class Scanner extends ClassPathBeanDefinitionScanner{
     Logger logger=Logger.getLogger(Scanner.class);
-    private BeanNameGenerator beanNameGenerator=new DefaultBeanNameGenerator();//spring   bean命名策略
     private Class<? extends Annotation> annotationClass ;//需要扫描的注解
     public Scanner(BeanDefinitionRegistry registry) {
         super(registry);
@@ -44,7 +41,6 @@ public class Scanner extends ClassPathBeanDefinitionScanner{
      */
     @Override
     protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
-        super.setBeanNameGenerator(this.beanNameGenerator);
         Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
         if(beanDefinitions.isEmpty()){
             logger.warn("not have rpc's bean found");
@@ -53,8 +49,12 @@ public class Scanner extends ClassPathBeanDefinitionScanner{
                 for (BeanDefinitionHolder holder:beanDefinitions){
                     GenericBeanDefinition definition=(GenericBeanDefinition)holder.getBeanDefinition();//获取spring实例对象bean
                     definition.setScope("prototype");//设置spring管理bean为多例
-                    definition.getPropertyValues().add("sourceClazz", definition.getBeanClassName());
-                    definition.setBeanClass(ScannerBeanFactory.class);
+                    definition.getPropertyValues().add("sourceClazz", definition.getBeanClass());
+                    definition.setBeanClass(new ProxyFactoryBean().getClass());
+//                    RS rs=definition.getBeanClass().getAnnotation(RS.class);
+//                    if(null!=rs){
+//                        addServer2Pool(rs.name());
+//                    }
                 }
             } catch (Exception e) {
                 logger.error(e);
@@ -66,15 +66,6 @@ public class Scanner extends ClassPathBeanDefinitionScanner{
     @Override
     protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
         return (beanDefinition.getMetadata().isInterface() || beanDefinition.getMetadata().isIndependent());
-    }
-
-    public BeanNameGenerator getBeanNameGenerator() {
-        return beanNameGenerator;
-    }
-
-    @Override
-    public void setBeanNameGenerator(BeanNameGenerator beanNameGenerator) {
-        this.beanNameGenerator = beanNameGenerator;
     }
 
     public Class<? extends Annotation> getAnnotationClass() {
@@ -96,7 +87,7 @@ public class Scanner extends ClassPathBeanDefinitionScanner{
     /**
      *  服务端类存入Pool连接池
      */
-    private void addServer2Pool(String key, ApplicationContext context) throws Exception{
+    private void addServer2Pool(String key) throws Exception{
         ServerPoolHandler poolHandler=null;
         try {
             poolHandler=(ServerPoolHandler)context.getBean("serverPoolHandler");
@@ -105,16 +96,10 @@ public class Scanner extends ClassPathBeanDefinitionScanner{
             if(StringUtils.hasText(key)){
                 Object targetObject = null;
                 try {
-                    targetObject = context.getBean(key);
+                    targetObject = this.context.getBean(key);
                 } catch (BeansException e) {}
-                RS rs=targetObject.getClass().getAnnotation(RS.class);
-                if(null!=rs){
-                    return ;
-                }else{
-                        poolHandler.getServerPool().addObject(key);
-                        logger.info("[server started :] "+key+" into pool");
-
-                }
+                poolHandler.getServerPool().addObject(key);
+                logger.info("[server started :] "+key+" into pool");
             }else{
                 throw new NullPointerException("server2pool:targetObject's key is null ");
             }
